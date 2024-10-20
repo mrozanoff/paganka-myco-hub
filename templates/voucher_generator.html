@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Align items at the top */
+        gap: 20px;
+    }
+/* Container positioning */
+.form-container {
+    position: relative; /* This makes the top-right button position relative to this container */
+    background: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    width: 330px;
+    text-align: center;
+}
+    .grey-section {
+        background-color: rgba(211, 211, 211, 0.8); /* Light grey background */
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        color: #333;
+    }
+    h1 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+    input[type="text"], input[type="number"], input[type="date"], input[type="file"] {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    .date-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .date-container input {
+        width: 45%;
+    }
+    input[type="submit"] {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    input[type="submit"]:hover {
+        background-color: #45a049;
+    }
+
+
+/* Update header-container to align title and button horizontally */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Info button in the top-right corner */
+.info-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 50%;
+    color: #333;
+    font-size: 18px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+}
+
+/* Hover effect for the button */
+.info-button:hover {
+    background-color: #333;
+    color: white;
+}
+
+
+/* Modal (info box) styling */
+.info-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 1001; /* On top of the overlay */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 600px;
+    text-align: left;
+}
+
+/* Info image - make it larger */
+.info-image {
+    width: 100%;  /* This makes the image take up the full width of the modal */
+    height: auto;  /* Maintains the aspect ratio */
+    margin-bottom: 10px;
+    max-width: 1000px; /* Sets a maximum width for the image if necessary */
+}
+
+/* Close button */
+.close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Overlay (fades the background) */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+    z-index: 1000; /* Behind the info box */
+    display: none;
+}
+
+
+
+</style>
+
+<div class="container">
+    <!-- Voucher Generator Form -->
+    <div class="form-container">
+        <div class="header-container">
+            <h1>Voucher Generator</h1>
+            <!-- Question Mark Button for Voucher Generator -->
+            <button type="button" class="info-button" onclick="toggleInfo('infoBoxVoucher', 'overlayVoucher')">?</button>
+        </div>
+        <form method="POST" action="/voucher_generator">
+            <input type="text" name="voucher_prefix" placeholder="Voucher Prefix (max 12 characters)" maxlength="12" required>
+            <input type="number" name="total_vouchers" placeholder="Total Vouchers (48 fills up one page)" required>
+            <input type="submit" value="Generate Vouchers">
+        </form>
+        <div class="grey-section">
+            Please note that you can add more characters but they are likely to be cut off, 48 vouchers will fill up a page. Please click 'Actual Size' when printing otherwise the cm lines will be inaccurate.
+        </div>
+
+        <!-- Modal Info Box for Voucher Generator -->
+        <div id="infoBoxVoucher" class="info-box" style="display:none;">
+            <span class="close" onclick="toggleInfo('infoBoxVoucher', 'overlayVoucher')">&#x2715;</span>
+            <img src="/static/images/generator_images/vouchers_example.jpg" alt="Info Image" class="info-image">
+            <p>Sample Program Output. Generates 5cm vouchers with a unique number to your submitted prefix. Don't forget to make it 'Actual Size' when printing.</p>
+        </div>
+        <!-- Overlay for Voucher Generator -->
+        <div id="overlayVoucher" class="overlay" onclick="toggleInfo('infoBoxVoucher', 'overlayVoucher')" style="display:none;"></div>
+    </div>
+
+    <!-- Label Generator Form -->
+    <div class="form-container">
+        <div class="header-container">
+            <h1>Label Generator</h1>
+            <!-- Question Mark Button for Label Generator -->
+            <button type="button" class="info-button" onclick="toggleInfo('infoBoxLabel', 'overlayLabel')">?</button>
+        </div>
+        <form method="POST" action="/label_generator">
+            <input type="text" name="username" placeholder="iNat Username" required>
+            <div class="date-container">
+                <input type="date" name="date_start" placeholder="Start Date" required>
+                <input type="date" name="date_end" placeholder="End Date" required>
+            </div>
+            <input type="number" name="image_place" placeholder="Image Place (default -1)" value="-1">
+            <input type="submit" value="Generate Labels">
+        </form>
+        <div class="grey-section">
+            -1 means it will select the last image of every observation. If you would like the first, enter 0. For the second image, enter 1, etc... I take all my photos with the voucher in them last, so I can easily match them to their number.
+        </div>
+
+        <!-- Modal Info Box for Label Generator -->
+        <div id="infoBoxLabel" class="info-box" style="display:none;">
+            <span class="close" onclick="toggleInfo('infoBoxLabel', 'overlayLabel')">&#x2715;</span>
+            <img src="/static/images/generator_images/labels_example.jpg" alt="Info Image" class="info-image">
+            <p>Sample Program Output. Will be 12 per page.</p>
+        </div>
+        <!-- Overlay for Label Generator -->
+        <div id="overlayLabel" class="overlay" onclick="toggleInfo('infoBoxLabel', 'overlayLabel')" style="display:none;"></div>
+    </div>
+
+    <!-- FASTA Generator Form -->
+    <div class="form-container">
+        <div class="header-container">
+            <h1>FASTA Generator</h1>
+            <!-- Question Mark Button for FASTA Generator -->
+            <button type="button" class="info-button" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')">?</button>
+        </div>
+        <form method="POST" action="/fasta_generator" enctype="multipart/form-data">
+            <input type="text" name="genus" placeholder="Genus Name" required>
+            <label>
+                <input type="checkbox" id="entireGenus" name="entire_genus"> Entire Genus
+            </label>
+            <input type="file" name="file" id="fileInput" required>
+            <input type="submit" value="Generate FASTA">
+        </form>
+        <div class="grey-section">
+            This pulls all relevant species' DNA ITS Data into a FASTA file. If you click 'Entire Genus', then you do not need to upload a file. If you would like specific species, please create a prov_name column and a name column. Input Excel file please. This can take some time to run if you are doing many.
+        </div>
+
+        <!-- Modal Info Box for FASTA Generator -->
+        <div id="infoBoxFasta" class="info-box" style="display:none;">
+            <span class="close" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')">&#x2715;</span>
+            <img src="/static/images/generator_images/fasta_example.jpg" alt="Info Image" class="info-image">
+            <p>Sample Program Input and Output.</p>
+        </div>
+        <!-- Overlay for FASTA Generator -->
+        <div id="overlayFasta" class="overlay" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')" style="display:none;"></div>
+    </div>
+</div>
+
+
+<script>
+    // Disable file input when "Entire Genus" checkbox is checked
+    document.getElementById('entireGenus').addEventListener('change', function() {
+        var fileInput = document.getElementById('fileInput');
+        fileInput.disabled = this.checked;
+    });
+</script>
+
+<script>
+function toggleInfo(infoBoxId, overlayId) {
+    var infoBox = document.getElementById(infoBoxId);
+    var overlay = document.getElementById(overlayId);
+
+    if (infoBox.style.display === "none") {
+        infoBox.style.display = "block";
+        overlay.style.display = "block";
+    } else {
+        infoBox.style.display = "none";
+        overlay.style.display = "none";
+    }
+}
+
+
+</script>
+{% endblock %}
+
+

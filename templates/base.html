@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paganka Projects</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Title Section -->
+    <div class="page-title">
+        <h1>Paganka Projects</h1>
+    </div>
+
+    <!-- Navigation Bar -->
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('key_to_stalked_gilled_mushrooms') }}">NE Agaric Key</a></li>
+                <li><a href="{{ url_for('voucher_generator') }}">Generators</a></li>
+                <li><a href="{{ url_for('gallery') }}">Photo Gallery</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>
