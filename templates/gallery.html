@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .gallery-container {
+        /*margin-top: 100px;  Pushes content below the navbar */
+        padding: 20px;
+    }
+
+    .gallery-title {
+        text-align: center;
+        font-size: 2rem;
+        color: #333;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .gallery-title:before,
+    .gallery-title:after {
+        content: '';
+        display: inline-block;
+        width: 40px;
+        height: 2px;
+        background-color: #333;
+        vertical-align: middle;
+        margin: 0 10px;
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Flexible tile layout */
+        grid-gap: 20px;
+    }
+
+    .image-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .image-container img {
+        width: 100%;
+        height: 250px; /* Fixed image height */
+        object-fit: cover;
+    }
+
+    .image-info {
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.9);
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .image-info p {
+        margin: 5px 0;
+    }
+
+    .image-info a {
+        color: #0066cc;
+        text-decoration: none;
+    }
+
+    .image-info a:hover {
+        text-decoration: underline;
+    }
+
+    .scrollable {
+        overflow-y: auto;
+        max-height: calc(100vh - 120px); /* Adjusts max height for viewport */
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: rgba(0, 0, 0, 0.8); /* Dark background */
+        padding-top: 60px;
+    }
+
+    .modal-content {
+        position: relative;
+        margin: auto;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content img {
+        max-width: 90%;
+        max-height: 80%;
+        object-fit: contain;
+    }
+
+    .modal-info {
+        color: #fff;
+        text-align: center;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.7); /* Dark background for info box */
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    .modal-info p {
+        margin: 5px 0;
+    }
+
+    .modal-info a {
+        color: #0066cc;
+        text-decoration: none;
+    }
+
+    .modal-info a:hover {
+        text-decoration: underline;
+    }
+
+    .close {
+        position: absolute;
+        top: 10px;
+        right: 25px;
+        color: #fff;
+        font-size: 35px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 1001;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #bbb;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .arrow {
+        position: absolute;
+        top: 50%;
+        width: auto;
+        height: 50px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 16px;
+        border-radius: 50%;
+        transform: translateY(-50%);
+        z-index: 1001;
+    }
+
+    .prev {
+        left: 10px;
+    }
+
+    .next {
+        right: 10px;
+    }
+</style>
+
+<div class="gallery-container">
+    <h2 class="gallery-title">My Not Terrible Photos</h2>
+
+    <div class="image-grid scrollable">
+        {% for image in images %}
+        <div class="image-container" data-index="{{ loop.index0 }}">
+            <img src="{{ url_for('static', filename='images/' ~ image.filename) }}" alt="{{ image.species }}">
+            <div class="image-info">
+                <p><strong>{{ image.species }}</strong></p>
+                <p><a href="{{ image.inat_link }}" target="_blank">iNat Link</a></p>
+                <p>{{ image.date }} - {{ image.location }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <img id="modalImage" src="">
+        <div class="modal-info" id="modalInfo"></div>
+        <div class="arrow prev" id="prevArrow">&lsaquo;</div>
+        <div class="arrow next" id="nextArrow">&rsaquo;</div>
+    </div>
+</div>
+
+<script>
+    var modal = document.getElementById("myModal");
+    var modalImg = document.getElementById("modalImage");
+    var modalInfo = document.getElementById("modalInfo");
+    var closeBtn = document.getElementsByClassName("close")[0];
+    var prevArrow = document.getElementById("prevArrow");
+    var nextArrow = document.getElementById("nextArrow");
+    var currentIndex = 0;
+
+    var images = Array.from(document.querySelectorAll(".image-container"));
+    var imageCount = images.length;
+
+    function openModal(index) {
+        currentIndex = index;
+        var img = images[index].querySelector("img");
+        var info = images[index].querySelector(".image-info").innerHTML;
+
+        modalImg.src = img.src;
+        modalInfo.innerHTML = info;
+        modal.style.display = "block";
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    function showNextImage() {
+        currentIndex = (currentIndex + 1) % imageCount;
+        openModal(currentIndex);
+    }
+
+    function showPrevImage() {
+        currentIndex = (currentIndex - 1 + imageCount) % imageCount;
+        openModal(currentIndex);
+    }
+
+    images.forEach((container, index) => {
+        container.addEventListener('click', () => openModal(index));
+    });
+
+    closeBtn.onclick = closeModal;
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+
+    prevArrow.onclick = showPrevImage;
+    nextArrow.onclick = showNextImage;
+</script>
+{% endblock %}

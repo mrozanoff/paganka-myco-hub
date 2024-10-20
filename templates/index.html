@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="welcome-container">
+        <h2>Welcome to <span class="highlight">Paganka Projects</span></h2>
+        <p class="intro-text">I have so many random scripts and experiments laying around, I thought it was time to finally organize everything in one place. So, I stitched together this website, designed for both myself and anyone else who might be interested in exploring these projects.</p>
+
+        <p class="contact-text">Feel free to reach out to me on <a href="https://www.inaturalist.org/people/paganka" target="_blank">iNaturalist</a> or via email at <a href="mailto:emrozanoff@gmail.com">emrozanoff@gmail.com</a>.</p>
+    </div>
+
+<style>
+    .welcome-container {
+        text-align: center;
+        margin: 2em auto;
+        padding: 2em;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+    }
+
+    h2 {
+        font-size: 2.5em;
+        margin-bottom: 0.5em;
+    }
+
+    .highlight {
+        color: #5b9e31;
+        font-weight: bold;
+    }
+
+    .intro-text {
+        font-size: 1.2em;
+        line-height: 1.6;
+        margin-bottom: 1.5em;
+    }
+
+    .contact-text {
+        font-size: 1.1em;
+    }
+
+    a {
+        color: #2a7ae2;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+
+{% endblock %}
+
