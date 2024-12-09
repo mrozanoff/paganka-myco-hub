@@ -1,3 +1,3 @@
 web:
 gunicorn
-app:paganka-myco-hub
+app:app
