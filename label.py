@@ -49,7 +49,11 @@ def create_card(observation, card_size=(600, 800)):
 
 def save_as_pdf(cards, output_filename, page_size=(2480, 3508), cards_per_page=(4, 4)):
     page_width, page_height = page_size
-    card_width, card_height = cards[0].size
+    try:
+        card_width, card_height = cards[0].size
+    except IndexError:
+        print("No Observations on this date range!")
+        return
     cols, rows = cards_per_page
     x_margin = (page_width - (cols * card_width)) // (cols + 1)
     y_margin = (page_height - (rows * card_height)) // (rows + 1) - 25

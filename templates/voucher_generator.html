@@ -157,11 +157,11 @@
 <div id="popup-overlay" style="display: none;">
     <div id="popup">
         <h2>Processing</h2>
-        <p>Generation started... With bigger requests this may take some time</p>
+        <p>Generation started... With bigger requests this may take some time. Please do not click anywhere on this page unless you wish to cancel</p>
         <div id="log-output">
             <!-- Logs or messages can be streamed here -->
         </div>
-        <button id="close-popup" style="display: none;">Close</button>
+        <button id="close-popup" style="display: none;">Cancel</button>
     </div>
 </div>
 
@@ -173,7 +173,7 @@
             <!-- Question Mark Button for Voucher Generator -->
             <button type="button" class="info-button" onclick="toggleInfo('infoBoxVoucher', 'overlayVoucher')">?</button>
         </div>
-        <form method="POST" action="/voucher_generator">
+        <form  class="generator-form"  method="POST" action="/voucher_generator">
             <input type="text" name="voucher_prefix" placeholder="Voucher Prefix (max 12 characters)" maxlength="12" required>
             <input type="number" name="total_vouchers" placeholder="Total Vouchers (48 fills up one page)" required>
             <input type="submit" value="Generate Vouchers">
@@ -199,14 +199,14 @@
             <!-- Question Mark Button for Label Generator -->
             <button type="button" class="info-button" onclick="toggleInfo('infoBoxLabel', 'overlayLabel')">?</button>
         </div>
-        <form id="label-form" method="POST" action="/label_generator">
+        <form class="generator-form"  method="POST" action="/label_generator">
             <input type="text" name="username" placeholder="iNat Username" required>
             <div class="date-container">
                 <input type="date" name="date_start" placeholder="Start Date" required>
                 <input type="date" name="date_end" placeholder="End Date" required>
             </div>
             <input type="number" name="image_place" placeholder="Image Place (default -1)" value="-1" required>
-            <input type="submit" id="submit-button" value="Generate Labels">
+            <input type="submit" value="Generate Labels">
         </form>
         <div class="grey-section">
             Please select a valid iNaturalist Username and enter a Start date and End date for the range of observations you want to pull. When selecting -1 means it will select the last image of every observation. If you would like the first, enter 0. For the second image, enter 1, etc... I take all my photos with the voucher in them last, so I can easily match them to their number.
@@ -229,7 +229,7 @@
             <!-- Question Mark Button for FASTA Generator -->
             <button type="button" class="info-button" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')">?</button>
         </div>
-        <form method="POST" action="/fasta_generator" enctype="multipart/form-data">
+        <form  class="generator-form"  method="POST" action="/fasta_generator" enctype="multipart/form-data">
             <input type="text" name="genus" placeholder="Genus Name" required>
             <label>
                 <input type="checkbox" id="entireGenus" name="entire_genus"> Entire Genus
@@ -262,25 +262,8 @@
 </script>
 
 <script>
-function toggleInfo(infoBoxId, overlayId) {
-    var infoBox = document.getElementById(infoBoxId);
-    var overlay = document.getElementById(overlayId);
-
-    if (infoBox.style.display === "none") {
-        infoBox.style.display = "block";
-        overlay.style.display = "block";
-    } else {
-        infoBox.style.display = "none";
-        overlay.style.display = "none";
-    }
-}
-
-
-</script>
-
-<script>
     document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('label-form');
+        const forms = document.querySelectorAll('.generator-form'); // Select all generator forms
         const popup = document.getElementById('popup-overlay');
         const closeButton = document.getElementById('close-popup');
         const logOutput = document.getElementById('log-output');
@@ -288,7 +271,8 @@ function toggleInfo(infoBoxId, overlayId) {
         // Show the popup
         function showPopup() {
             popup.style.display = 'block';
-            logOutput.textContent = 'Starting generation...';
+            logOutput.textContent = 'Processing your request...';
+            closeButton.style.display = 'none';
         }
 
         // Hide the popup
@@ -296,37 +280,41 @@ function toggleInfo(infoBoxId, overlayId) {
             popup.style.display = 'none';
         }
 
-        // Intercept form submission
-        form.addEventListener('submit', (event) => {
-            // Show the popup
-            showPopup();
+        // Handle form submissions
+        forms.forEach((form) => {
+            form.addEventListener('submit', (event) => {
+                
+                // Show the popup
+                showPopup();
 
-            // Submit the form via JavaScript
-            const formData = new FormData(form);
+                // Submit the form via JavaScript
+                const formData = new FormData(form);
 
-            fetch(form.action, {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => {
-                    if (response.ok) {
-                        logOutput.textContent += '\nFile Success!';
-                        closeButton.style.display = 'block';
-                    } else {
-                        logOutput.textContent += '\nError: Failed to generate labels. Please email emrozanoff at gmail if this happens often with a screenshot of what you entered.';
-                        closeButton.style.display = 'block';
-                    }
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData
                 })
-                .catch(error => {
-                    logOutput.textContent += `\nError: ${error.message}`;
-                    closeButton.style.display = 'block';
-                });
+                    .then(response => {
+                        if (response.ok) {
+                            logOutput.textContent += '\nRequest processed successfully!';
+                            hidePopup();
+                        } else {
+                            logOutput.textContent += '\nError: Failed to process the request.';
+                        }
+                        closeButton.style.display = 'block';
+                    })
+                    .catch(error => {
+                        logOutput.textContent += `\nError: ${error.message}`;
+                        closeButton.style.display = 'block';
+                    });
+            });
         });
 
         // Handle popup close
         closeButton.addEventListener('click', hidePopup);
     });
 </script>
+
 
 
 {% endblock %}
