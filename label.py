@@ -1,4 +1,5 @@
 from io import BytesIO
+from flask import jsonify
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from PIL import Image, ImageDraw, ImageFont
@@ -21,7 +22,8 @@ def get_observations(username, date_start, date_end):
         try:
             data = response.json()['results']
         except KeyError:
-            print("Wrong username!")
+            print("Wrong Username")
+            # return jsonify(error="Wrong username! Please check the input."), 400
         if not data:
             break
         observations.extend(data)
