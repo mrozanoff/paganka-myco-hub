@@ -37,8 +37,8 @@ def create_card(observation, card_size=(600, 800)):
     image = download_image(image_url)
     image = image.resize((card_size[0], int(card_size[1] * 0.775)))
     card.paste(image, (0, 0))
-    font = ImageFont.truetype("arial.ttf", size=40)
-    font_small = ImageFont.truetype("arial.ttf", size=25)
+    font = ImageFont.truetype("./static/fonts/arial.ttf", size=40)
+    font_small = ImageFont.truetype("./static/fonts/arial.ttf", size=25)
     text_x = 10
     text_y = image.height + 10
     draw.text((text_x, text_y), f"Name: ", fill="black", font=font)

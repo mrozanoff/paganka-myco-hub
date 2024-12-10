@@ -43,7 +43,7 @@ def get_observation_ids(name, param_type):
             params["page"] += 1  # Move to the next page
             time.sleep(WAIT_TIME)
         else:
-            print(f"Failed to retrieve data for {provisional_name}: {response.status_code}")
+            print(f"Failed to retrieve data for {name}: {response.status_code}")
             break
     return observation_ids
 
