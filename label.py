@@ -23,7 +23,7 @@ def get_observations(username, date_start, date_end):
             data = response.json()['results']
         except KeyError:
             print("Wrong Username")
-            # return jsonify(error="Wrong username! Please check the input."), 400
+            return jsonify(error="Wrong username! Please check the input."), 400
         if not data:
             break
         observations.extend(data)
