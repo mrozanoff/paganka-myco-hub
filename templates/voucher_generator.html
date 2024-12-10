@@ -131,9 +131,39 @@
     display: none;
 }
 
+#popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
+#popup {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
 
 </style>
+
+<!-- Popup overlay structure -->
+<div id="popup-overlay" style="display: none;">
+    <div id="popup">
+        <h2>Processing</h2>
+        <p>Generation started... With bigger requests this may take some time</p>
+        <div id="log-output">
+            <!-- Logs or messages can be streamed here -->
+        </div>
+        <button id="close-popup" style="display: none;">Close</button>
+    </div>
+</div>
 
 <div class="container">
     <!-- Voucher Generator Form -->
@@ -169,17 +199,17 @@
             <!-- Question Mark Button for Label Generator -->
             <button type="button" class="info-button" onclick="toggleInfo('infoBoxLabel', 'overlayLabel')">?</button>
         </div>
-        <form method="POST" action="/label_generator">
+        <form id="label-form" method="POST" action="/label_generator">
             <input type="text" name="username" placeholder="iNat Username" required>
             <div class="date-container">
                 <input type="date" name="date_start" placeholder="Start Date" required>
                 <input type="date" name="date_end" placeholder="End Date" required>
             </div>
-            <input type="number" name="image_place" placeholder="Image Place (default -1)" value="-1">
-            <input type="submit" value="Generate Labels">
+            <input type="number" name="image_place" placeholder="Image Place (default -1)" value="-1" required>
+            <input type="submit" id="submit-button" value="Generate Labels">
         </form>
         <div class="grey-section">
-            -1 means it will select the last image of every observation. If you would like the first, enter 0. For the second image, enter 1, etc... I take all my photos with the voucher in them last, so I can easily match them to their number.
+            Please select a valid iNaturalist Username and enter a Start date and End date for the range of observations you want to pull. When selecting -1 means it will select the last image of every observation. If you would like the first, enter 0. For the second image, enter 1, etc... I take all my photos with the voucher in them last, so I can easily match them to their number.
         </div>
 
         <!-- Modal Info Box for Label Generator -->
@@ -247,6 +277,58 @@ function toggleInfo(infoBoxId, overlayId) {
 
 
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('label-form');
+        const popup = document.getElementById('popup-overlay');
+        const closeButton = document.getElementById('close-popup');
+        const logOutput = document.getElementById('log-output');
+
+        // Show the popup
+        function showPopup() {
+            popup.style.display = 'block';
+            logOutput.textContent = 'Starting generation...';
+        }
+
+        // Hide the popup
+        function hidePopup() {
+            popup.style.display = 'none';
+        }
+
+        // Intercept form submission
+        form.addEventListener('submit', (event) => {
+            // Show the popup
+            showPopup();
+
+            // Submit the form via JavaScript
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        logOutput.textContent += '\nFile Success!';
+                        closeButton.style.display = 'block';
+                    } else {
+                        logOutput.textContent += '\nError: Failed to generate labels. Please email emrozanoff at gmail if this happens often with a screenshot of what you entered.';
+                        closeButton.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    logOutput.textContent += `\nError: ${error.message}`;
+                    closeButton.style.display = 'block';
+                });
+        });
+
+        // Handle popup close
+        closeButton.addEventListener('click', hidePopup);
+    });
+</script>
+
+
 {% endblock %}
 
 
