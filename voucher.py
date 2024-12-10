@@ -39,7 +39,7 @@ def create_ruler_image(voucher_number):
             draw.line([x, 0, x, RULER_HEIGHT_PT / 2], fill='black')
 
     font_size = 14
-    font = ImageFont.truetype("arial.ttf", font_size)
+    font = ImageFont.truetype("./static/fonts/arial.ttf", font_size)
     text = voucher_number
     text_width, text_height = draw.textsize(text, font=font)
     text_x = (IMAGE_WIDTH_PT - text_width) / 2
