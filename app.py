@@ -166,36 +166,6 @@ def fungi_finding_prediction():
     return render_template('fungi_finding_prediction.html')
 
 
-# Temporary list of images (you can load this from a database or JSON file in the future)
-images = [
-    {
-        'filename': 'helvella.jpg',
-        'species': 'Helvella cf. cupuliformis',
-        'inat_link': 'https://www.inaturalist.org/observations/224769178',
-        'date': 'Jun 22, 2024',
-        'location': 'Perry County, US-PA, US'
-    },
-    {
-        'filename': 'unknown1.jpg',
-        'species': 'Unknown',
-        'inat_link': 'https://www.inaturalist.org/observations/237669128',
-        'date': 'Aug 24, 2024',
-        'location': 'Pike County, US-PA, US'
-    },
-    {
-        'filename': 'unknown2.jpg',
-        'species': 'Unknown',
-        'inat_link': '',
-        'date': 'June 2024',
-        'location': 'PA, USA'
-    },
-]
-
-
-@app.route('/gallery')
-def gallery():
-    return render_template('gallery.html', images=images)
-
 if __name__ == '__main__':
     app.run(debug=True)
 
