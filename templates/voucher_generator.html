@@ -46,7 +46,7 @@
 	}
 	input[type="submit"] {
 	padding: 10px 20px;
-	background-color: #4CAF50;
+	background-color: #39453a;
 	color: white;
 	border: none;
 	border-radius: 5px;
@@ -230,10 +230,9 @@
 		<form class="generator-form"  method="POST" action="/label_generator">
 			<input type="text" name="username" placeholder="iNat Username" required>
 			<div class="date-container">
-				<input type="date" class="date_inputs" name="date_start" placeholder="Start Date" required>
-				<input type="date" class="date_inputs" name="date_end" placeholder="End Date" required>
+				<input type="date" class="date_inputs" id="date_start" name="date_start" placeholder="Start Date" required>
+				<input type="date" class="date_inputs" id="date_end" name="date_end" placeholder="End Date" required disabled>
 			</div>
-            <!-- old one: <input type="number" name="image_place" placeholder="Image Place (default -1)" value="-1" required> -->
 			<label for="image_place">Label Display Image</label>
                 <select name="image_place" id="image_place" required>
                     <option value="0">First</option>
@@ -376,15 +375,44 @@
 </script>
 
 <script>
-    // Get all date inputs with the class "date-input"
-    const dateInputs = document.querySelectorAll('.date_inputs');
+    // Get date inputs
+    const startDateInput = document.getElementById('date_start');
+    const endDateInput = document.getElementById('date_end');
     
     // Get today's date in the format "YYYY-MM-DD"
     const today = new Date().toISOString().split('T')[0];
     
-    // Set the max attribute for each date input
-    dateInputs.forEach(input => {
-        input.max = today;
+    // Set max for both date inputs initially
+    startDateInput.max = today;
+    endDateInput.max = today;
+
+    // Disable endDateInput initially
+    endDateInput.disabled = true;
+
+    // Listen for changes on the start date input
+    startDateInput.addEventListener('change', () => {
+        const startDateValue = startDateInput.value;
+        if (startDateValue) {
+            // Enable end date input and set its min
+            endDateInput.disabled = false;
+            endDateInput.min = startDateValue;
+        } else {
+            // Disable end date input and reset its value and constraints
+            endDateInput.disabled = true;
+            endDateInput.value = '';
+            endDateInput.min = '';
+        }
+    });
+
+    // Listen for changes on the end date input
+    endDateInput.addEventListener('change', () => {
+        const endDateValue = endDateInput.value;
+        if (endDateValue) {
+            // Ensure the end date is valid relative to the start date
+            if (startDateInput.value && endDateValue < startDateInput.value) {
+                endDateInput.value = startDateInput.value; // Reset if invalid
+            }
+        }
     });
 </script>
 

@@ -23,8 +23,8 @@ def get_observations(username, date_start, date_end):
         if response.status_code == 422:
             print("response 422, mispelled username")
 
-        print(response)
-        return
+        # print(response)
+        # return
         data = response.json()['results']
 
         if not data:

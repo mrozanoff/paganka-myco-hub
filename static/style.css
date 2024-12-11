@@ -38,7 +38,7 @@ body {
 header {
     margin-top: 10px; /* Adds some spacing between the title and the navbar*/ 
     width: 100%;
-    background-color: #4CAF50;
+    background-color: #39453a;
     padding: 10px 0;
     /*position: fixed;*/
     top: 0;
@@ -91,139 +91,7 @@ nav ul li a:hover {
 
 
 
-/* Flexbox for filters to allow horizontal alignment and wrapping */
-.filter-container {
-    display: flex;
-    flex-wrap: wrap; /* Ensure filters wrap if there isn't enough space */
-    justify-content: flex-start;
-    gap: 15px; /* Add space between filters */
-    padding: 10px;
-}
 
-/* Style for each dropdown */
-.dropdown-check-list {
-    position: relative;
-    display: inline-block;
-    width: auto; /* Allow filters to take the required width */
-    margin-right: 10px; /* Space between filters */
-}
-
-/* Style for the clickable anchor of the dropdown */
-.dropdown-check-list .anchor {
-    position: relative;
-    display: inline-block;
-    padding: 8px 12px;
-    background: #f4f4f4;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    white-space: nowrap; /* Prevent text from wrapping inside */
-    width: 160px;
-}
-
-/* Positioning the down arrow */
-.dropdown-check-list .anchor:after {
-    content: "\25BC"; /* Down arrow symbol */
-    position: absolute;
-    right: 10px; /* Space between the text and arrow */
-    top: 50%; /* Vertically center the arrow */
-    transform: translateY(-50%);
-}
-
- Open dropdown arrow styling 
-.dropdown-check-list.visible .anchor:after {
-    content: "\25B2"; /* Up arrow symbol when open */
-}
-
-/* Dropdown menu styling */
-.dropdown-check-list ul {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-    max-height: 200px;
-    overflow-y: auto;
-    background: white;
-    border: 1px solid #ccc;
-    position: absolute;
-    z-index: 1;
-    display: none;
-    width: 180px; /* Fixed width for dropdown items */
-}
-
-/* Show dropdown when visible */
-.dropdown-check-list.visible ul {
-    display: block;
-}
-
-/* Styling for checkboxes inside the dropdown */
-.dropdown-check-list input[type="checkbox"] {
-    margin-right: 10px;
-}
-
-.dropdown-check-list label {
-    display: block;
-    padding: 5px 10px;
-    cursor: pointer;
-}
-
-
-/* Table styling */
-table {
-    border-collapse: collapse;
-    margin-top: 20px;
-    width: 100%;
-    font-family: Verdana, sans-serif;
-    background-color: rgba(255, 255, 255, 0.9); /* Modern light background */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-}
-
-th, td {
-    padding: 15px;
-    text-align: center;
-    border-bottom: 2px solid #ddd;
-}
-
-th {
-    background-color: #8b9a77; /* Sage green for header */
-    color: white;
-    font-size: 16px;
-    border-bottom: 4px solid #5b7e60; /* Earthy green bottom border */
-}
-
-td {
-    font-size: 14px;
-    background-color: #f8f5f2; /* Off-white background */
-}
-
-tr:hover {
-    background-color: #e5e5df; /* Light stone hover effect */
-}
-
-/* Add slight alternating row colors */
-tbody tr:nth-child(odd) {
-    background-color: #eef0e9; /* Very light green */
-}
-
-tbody tr:nth-child(even) {
-    background-color: #f8f5f2; /* Off-white */
-}
-
-
-
-/* Scroll settings */
-table {
-    max-height: 500px; /* Set a max height */
-    overflow-y: auto;
-}
-
-
-/* CSS to hide key columns */
-th:nth-child(3), th:nth-child(4), th:nth-child(5), th:nth-child(8), th:nth-child(12), th:nth-child(13), th:nth-child(7), th:nth-child(10) {
-    display: none
-}
-td:nth-child(3), td:nth-child(4), td:nth-child(5), td:nth-child(8), td:nth-child(12), td:nth-child(13), td:nth-child(7), td:nth-child(10) {
-    display: none
-}
 
 
 
