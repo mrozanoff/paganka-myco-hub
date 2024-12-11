@@ -19,11 +19,14 @@ def get_observations(username, date_start, date_end):
     while True:
         url = f"https://api.inaturalist.org/v1/observations?user_id={username}&d1={date_start}&d2={date_end}&page={page}&per_page={per_page}" # add location and taxon id here to filter
         response = requests.get(url)
-        try:
-            data = response.json()['results']
-        except KeyError:
-            print("Wrong Username")
-            return jsonify(error="Wrong username! Please check the input."), 400
+
+        if response.status_code == 422:
+            print("response 422, mispelled username")
+
+        print(response)
+        return
+        data = response.json()['results']
+
         if not data:
             break
         observations.extend(data)

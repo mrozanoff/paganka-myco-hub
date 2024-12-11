@@ -230,8 +230,8 @@
 		<form class="generator-form"  method="POST" action="/label_generator">
 			<input type="text" name="username" placeholder="iNat Username" required>
 			<div class="date-container">
-				<input type="date" name="date_start" placeholder="Start Date" required>
-				<input type="date" name="date_end" placeholder="End Date" required>
+				<input type="date" class="date_inputs" name="date_start" placeholder="Start Date" required>
+				<input type="date" class="date_inputs" name="date_end" placeholder="End Date" required>
 			</div>
             <!-- old one: <input type="number" name="image_place" placeholder="Image Place (default -1)" value="-1" required> -->
 			<label for="image_place">Label Display Image</label>
@@ -375,5 +375,17 @@
 
 </script>
 
+<script>
+    // Get all date inputs with the class "date-input"
+    const dateInputs = document.querySelectorAll('.date_inputs');
+    
+    // Get today's date in the format "YYYY-MM-DD"
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Set the max attribute for each date input
+    dateInputs.forEach(input => {
+        input.max = today;
+    });
+</script>
 
 {% endblock %}
