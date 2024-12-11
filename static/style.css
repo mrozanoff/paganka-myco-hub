@@ -1,28 +1,29 @@
 /* Page title styling */
 .page-title {
     text-align: center;
-    font-size: 2.5rem; /* Increase the font size */
-    font-family: 'Georgia', serif; /* Apply a serif font for a more elegant look */
-    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
-    color: #4CAF50; /* Matching the color theme */
-    padding: 20px 0;  /*Add padding for extra height*/ 
+    font-size: 2.7rem; /* Slightly increase the font size */
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; /* More elegant serif font */
+    background-color: rgba(255, 255, 255, 0.9); /* Slightly increase the opacity for readability */
+    color: #39453a; /* Matching the color theme */
+    padding: 30px 0;  /* Increase padding for more height */
     margin: 0; /* Remove margin to keep it compact */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for depth */
-    border-bottom: 2px solid #4CAF50; /* Optional bottom border for separation */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); /* Enhance shadow for more depth */
+    border-bottom: 3px solid #39453a; /* Slightly thicker bottom border for emphasis */
+    border-radius: 8px; /* Add a subtle border radius for a softer look */
 }
 
+/* Styling for the title text */
 .page-title h1 {
-    font-size: 28px; /* Controls the size of the title */
-    color: #333; /* Text color */
-    font-weight: normal; /* Adjust weight if necessary */
+    font-size: 32px; /* Increase font size for more prominence */
+    color: #010101; /* Darker green for contrast */
+    font-weight: 600; /* Slightly bolder font weight */
     margin: 0; /* Removes any default margin */
+    letter-spacing: 1px; /* Add subtle letter spacing for a refined look */
+    text-transform: capitalize; /* Ensure the title looks polished */
 }
 
 
-/* Make space for the navbar and title */
-/*.content {
-    padding-top: 75px;  Adjusted to fit both the title and navbar 
-}*/
+
 
 
 /* Ensure the navbar stays at the top */
@@ -92,9 +93,6 @@ nav ul li a:hover {
 
 
 
-
-
-
 /* General tab styles */
 .tabs {
     text-align: center;
@@ -102,7 +100,7 @@ nav ul li a:hover {
 }
 
 .tab-button {
-    background-color: #4CAF50;
+    background-color: #39453a;
     color: white;
     padding: 10px 20px;
     margin: 5px;
