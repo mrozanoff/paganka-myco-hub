@@ -48,34 +48,63 @@ header {
     box-sizing: border-box;
 }
 
-/* Navbar list styles */
+
+
+
 nav ul {
     list-style: none;
-    margin: 0;
     padding: 0;
+    margin: 0;
     display: flex;
     justify-content: center;
 }
 
-/* Navbar items */
 nav ul li {
-    margin: 0 15px;
+    position: relative;
 }
 
-/* Navbar links */
 nav ul li a {
     text-decoration: none;
-    color: white;
     padding: 10px 20px;
     font-size: 16px;
     display: block;
+    color: #f2f2f2;
+    /* background-color: #227a26; */
 }
 
-/* Navbar link hover effect */
 nav ul li a:hover {
-    background-color: #45a049;
-    border-radius: 5px;
+    background-color: #227a26;
 }
+
+
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #39453a;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    list-style: none;
+    padding: 0; 
+    margin: 0;
+    z-index: 1000;
+    width: max-content;
+}
+
+.dropdown-menu li a {
+    padding: 10px 20px;
+    white-space: nowrap;
+}
+
+.dropdown-menu li a:hover {
+    background-color: #6d706d;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
 
 /* Adjust the content area to not overlap with the fixed navbar */
 .content {
