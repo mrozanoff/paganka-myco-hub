@@ -14,6 +14,7 @@ import traceback
 from label import *
 from fasta import *
 from voucher import save_vouchers_to_pdf
+from dkey import *
 
 app = Flask(__name__)
 
@@ -152,6 +153,33 @@ def fasta_generator():
             return send_file(temp_file.name, as_attachment=True, download_name='out.fasta', mimetype='text/plain')
     return render_template('fasta_generator.html')
 
+@app.route('/dkey_builder', methods=['GET', 'POST'])
+def dkey_builder():
+    if request.method == 'POST':
+        file = request.files['file']
+
+        # Read the uploaded file 
+        df = pd.read_csv(file)
+
+        # Preprocess data
+        X, y, feature_cols = preprocess_data(df)
+
+        # Build tree
+        tree = build_tree(X, y)
+        
+        # Assuming `tree` and `X` are created earlier in the function or elsewhere in the app
+        key = format_dichotomous_key(tree, X.columns)
+
+        # print(key)
+
+        # Save to a temporary file and send it as a response
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.txt', mode='w', encoding="utf-8") as temp_file:
+            temp_file.write(key)  # Write the string to the temporary file
+            temp_file.flush()  # Ensure all data is written
+            return send_file(temp_file.name, as_attachment=True, download_name='dichotomous_key.txt', mimetype='text/plain')
+
+
+    return render_template('dkey.html')
 
 @app.route('/purple_russulas')
 def purple_russulas():
@@ -161,9 +189,7 @@ def purple_russulas():
 def key_to_stalked_gilled_mushrooms():
     return render_template('key_to_stalked_gilled_mushrooms.html')
 
-@app.route('/dkeybuilder')
-def dkey_builder():
-    return render_template('dkey.html')
+
 
 @app.route('/fungi_finding_prediction')
 def fungi_finding_prediction():
