@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, Blueprint
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -161,9 +161,17 @@ def purple_russulas():
 def key_to_stalked_gilled_mushrooms():
     return render_template('key_to_stalked_gilled_mushrooms.html')
 
+@app.route('/dkeybuilder')
+def dkey_builder():
+    return render_template('dkey.html')
+
 @app.route('/fungi_finding_prediction')
 def fungi_finding_prediction():
     return render_template('fungi_finding_prediction.html')
+
+# @app.route('/pyrenomycetes_key')
+# def pyrenomycetes_key():
+#     return render_template('vis.html')
 
 
 if __name__ == '__main__':

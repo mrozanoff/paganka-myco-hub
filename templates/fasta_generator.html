@@ -196,64 +196,33 @@
 </div>
 
 <div class="container">
-	<!-- Voucher Generator Form -->
+	<!-- FASTA Generator Form -->
 	<div class="form-container">
 		<div class="header-container">
-			<h1>Voucher Generator</h1>
-			<!-- Question Mark Button for Voucher Generator -->
-			<button type="button" class="info-button" onclick="toggleInfo('infoBoxVoucher', 'overlayVoucher')">?</button>
+			<h1>FASTA Generator</h1>
+			<!-- Question Mark Button for FASTA Generator -->
+			<button type="button" class="info-button" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')">?</button>
 		</div>
-		<form  class="generator-form"  method="POST" action="/voucher_generator">
-			<input type="text" name="voucher_prefix" placeholder="Voucher Prefix (max 12 characters)" maxlength="12" required>
-			<input type="number" name="total_vouchers" placeholder="Total Vouchers (48 fills up one page)" required>
-			<input type="submit" value="Generate Vouchers">
+		<form  class="generator-form"  method="POST" action="/fasta_generator" enctype="multipart/form-data">
+			<input type="text" name="genus" placeholder="Genus Name" required>
+			<label>
+			<input type="checkbox" id="entireGenus" name="entire_genus"> Entire Genus
+			</label>
+			<input type="file" name="file" id="fileInput" required>
+			<input type="submit" value="Generate FASTA">
 		</form>
 		<div class="grey-section">
-			Please note that you can add more characters to the prefex but they are likely to be cut off, 48 vouchers will fill up a page. Remember to click 'Actual Size' when printing otherwise the cm lines will be inaccurate.
+			This pulls all relevant species' DNA ITS Data into a FASTA file. If you click 'Entire Genus', then you do not need to upload a file. If you would like specific species, please create a prov_name column and a name column. Input Excel file please. This can take some time to run if you are doing many.
 		</div>
-		<!-- Modal Info Box for Voucher Generator -->
-		<div id="infoBoxVoucher" class="info-box" style="display:none;">
-			<span class="close" onclick="toggleInfo('infoBoxVoucher', 'overlayVoucher')">&#x2715;</span>
-			<img src="/static/images/generator_images/vouchers_example.jpg" alt="Info Image" class="info-image">
-			<p>Sample Program Output. Generates 5cm vouchers with a unique number to your submitted prefix. Don't forget to make it 'Actual Size' when printing.</p>
+		<!-- Modal Info Box for FASTA Generator -->
+		<div id="infoBoxFasta" class="info-box" style="display:none;">
+			<span class="close" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')">&#x2715;</span>
+			<img src="/static/images/generator_images/fasta_example.jpg" alt="Info Image" class="info-image">
+			<p>Sample Program Input and Output.</p>
 		</div>
-		<!-- Overlay for Voucher Generator -->
-		<div id="overlayVoucher" class="overlay" onclick="toggleInfo('infoBoxVoucher', 'overlayVoucher')" style="display:none;"></div>
+		<!-- Overlay for FASTA Generator -->
+		<div id="overlayFasta" class="overlay" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')" style="display:none;"></div>
 	</div>
-	<!-- Label Generator Form -->
-	<div class="form-container">
-		<div class="header-container">
-			<h1>Label Generator</h1>
-			<!-- Question Mark Button for Label Generator -->
-			<button type="button" class="info-button" onclick="toggleInfo('infoBoxLabel', 'overlayLabel')">?</button>
-		</div>
-		<form class="generator-form"  method="POST" action="/label_generator">
-			<input type="text" name="username" placeholder="iNat Username" required>
-			<div class="date-container">
-				<input type="date" class="date_inputs" id="date_start" name="date_start" placeholder="Start Date" required>
-				<input type="date" class="date_inputs" id="date_end" name="date_end" placeholder="End Date" required disabled>
-			</div>
-			<label for="image_place">Label Display Image</label>
-                <select name="image_place" id="image_place" required>
-                    <option value="0">First</option>
-                    <option value="-1" selected>Last</option>
-                </select>
-			<input type="submit" value="Generate Labels">
-		</form>
-		<div class="grey-section">
-			Please select a valid iNaturalist Username and enter a Start date and End date for the range of observations you want to pull. Image placement will determine which of your observation photos will be shown on each label.
-		</div>
-		<!-- Modal Info Box for Label Generator -->
-		<div id="infoBoxLabel" class="info-box" style="display:none;">
-			<span class="close" onclick="toggleInfo('infoBoxLabel', 'overlayLabel')">&#x2715;</span>
-			<img src="/static/images/generator_images/labels_example.jpg" alt="Info Image" class="info-image">
-			<p>Sample Program Output. Will be 12 per page.<br><br>I use this in conjunction with the voucher generator. All of the observations I want to bring home
-            have a photo of the mushroom and voucher (last photo for me). Then I use the label generator to save time creating labels for the specimens I keep</p>
-		</div>
-		<!-- Overlay for Label Generator -->
-		<div id="overlayLabel" class="overlay" onclick="toggleInfo('infoBoxLabel', 'overlayLabel')" style="display:none;"></div>
-	</div>
-	
 </div>
 <script>
 	// Disable file input when "Entire Genus" checkbox is checked
