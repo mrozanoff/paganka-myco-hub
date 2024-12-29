@@ -1,4 +1,5 @@
 from io import BytesIO
+from flask import jsonify
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from PIL import Image, ImageDraw, ImageFont
@@ -18,7 +19,14 @@ def get_observations(username, date_start, date_end):
     while True:
         url = f"https://api.inaturalist.org/v1/observations?user_id={username}&d1={date_start}&d2={date_end}&page={page}&per_page={per_page}" # add location and taxon id here to filter
         response = requests.get(url)
+
+        if response.status_code == 422:
+            print("response 422, mispelled username")
+
+        # print(response)
+        # return
         data = response.json()['results']
+
         if not data:
             break
         observations.extend(data)
@@ -49,7 +57,11 @@ def create_card(observation, card_size=(600, 800)):
 
 def save_as_pdf(cards, output_filename, page_size=(2480, 3508), cards_per_page=(4, 4)):
     page_width, page_height = page_size
-    card_width, card_height = cards[0].size
+    try:
+        card_width, card_height = cards[0].size
+    except IndexError:
+        print("No Observations on this date range!")
+        return
     cols, rows = cards_per_page
     x_margin = (page_width - (cols * card_width)) // (cols + 1)
     y_margin = (page_height - (rows * card_height)) // (rows + 1) - 25

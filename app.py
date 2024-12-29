@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, Blueprint
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -14,6 +14,7 @@ import traceback
 from label import *
 from fasta import *
 from voucher import save_vouchers_to_pdf
+from dkey import *
 
 app = Flask(__name__)
 
@@ -152,6 +153,33 @@ def fasta_generator():
             return send_file(temp_file.name, as_attachment=True, download_name='out.fasta', mimetype='text/plain')
     return render_template('fasta_generator.html')
 
+@app.route('/dkey_builder', methods=['GET', 'POST'])
+def dkey_builder():
+    if request.method == 'POST':
+        file = request.files['file']
+
+        # Read the uploaded file 
+        df = pd.read_csv(file)
+
+        # Preprocess data
+        X, y, feature_cols = preprocess_data(df)
+
+        # Build tree
+        tree = build_tree(X, y)
+        
+        # Assuming `tree` and `X` are created earlier in the function or elsewhere in the app
+        key = format_dichotomous_key(tree, X.columns)
+
+        # print(key)
+
+        # Save to a temporary file and send it as a response
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.txt', mode='w', encoding="utf-8") as temp_file:
+            temp_file.write(key)  # Write the string to the temporary file
+            temp_file.flush()  # Ensure all data is written
+            return send_file(temp_file.name, as_attachment=True, download_name='dichotomous_key.txt', mimetype='text/plain')
+
+
+    return render_template('dkey.html')
 
 @app.route('/purple_russulas')
 def purple_russulas():
@@ -161,40 +189,16 @@ def purple_russulas():
 def key_to_stalked_gilled_mushrooms():
     return render_template('key_to_stalked_gilled_mushrooms.html')
 
+
+
 @app.route('/fungi_finding_prediction')
 def fungi_finding_prediction():
     return render_template('fungi_finding_prediction.html')
 
+# @app.route('/pyrenomycetes_key')
+# def pyrenomycetes_key():
+#     return render_template('vis.html')
 
-# Temporary list of images (you can load this from a database or JSON file in the future)
-images = [
-    {
-        'filename': 'helvella.jpg',
-        'species': 'Helvella cf. cupuliformis',
-        'inat_link': 'https://www.inaturalist.org/observations/224769178',
-        'date': 'Jun 22, 2024',
-        'location': 'Perry County, US-PA, US'
-    },
-    {
-        'filename': 'unknown1.jpg',
-        'species': 'Unknown',
-        'inat_link': 'https://www.inaturalist.org/observations/237669128',
-        'date': 'Aug 24, 2024',
-        'location': 'Pike County, US-PA, US'
-    },
-    {
-        'filename': 'unknown2.jpg',
-        'species': 'Unknown',
-        'inat_link': '',
-        'date': 'June 2024',
-        'location': 'PA, USA'
-    },
-]
-
-
-@app.route('/gallery')
-def gallery():
-    return render_template('gallery.html', images=images)
 
 if __name__ == '__main__':
     app.run(debug=True)
