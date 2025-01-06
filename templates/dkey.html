@@ -181,6 +181,22 @@
         box-shadow: 0 0 5px rgba(76, 175, 80, 0.6); /* Light green glow on focus */
     }
 
+	.image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; /* Adjust the gap between images */
+}
+
+.info-image {
+    width: 100%; /* Adjust width to your desired size */
+	max-width: 300px;
+    height: auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 </style>
 <!-- Popup overlay structure -->
 <div id="popup-overlay" style="display: none;">
@@ -209,13 +225,14 @@
 		</form>
 		<div class="grey-section">
 			Please click the '?' to further understand the file format. This is based off of a decision tree algorithm, so you will likely get
-            different results every time you run this.
+            different results every time you run this. This code needs some upgrading, but it gets the job done.
 		</div>
 		<!-- Modal Info Box for fkey Generator -->
 		<div id="infoBoxDKey" class="info-box" style="display:none;">
 			<span class="close" onclick="toggleInfo('infoBoxDKey', 'overlayDKey')">&#x2715;</span>
 			<img src="/static/images/generator_images/dkey_example.jpg" alt="Info Image" class="info-image">
-			<p>Sample Program Input.</p>
+			<img src="/static/images/generator_images/dkey_output_example.jpg" alt="Info Image" class="info-image">
+			<p>Sample Program Input and output.</p>
 		</div>
 		<!-- Overlay for dkeyGenerator -->
 		<div id="overlayDKey" class="overlay" onclick="toggleInfo('infoBoxDKey', 'overlayDKey')" style="display:none;"></div>
