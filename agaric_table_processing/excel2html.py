@@ -5,7 +5,7 @@ cleans df and makes into html
 """
 
 #Keys to be processed
-to_be_expanded = ['Spore Print Colour 2', 'Habitat', 'Size', 'Gill Attachment', 'Partial Veil', 'Cap Features', 'Stipe Features']
+to_be_expanded = ['Exact Spore Print Colour', 'Habitat', 'Size', 'Gill Attachment', 'Partial Veil', 'Cap Features', 'Stipe Features']
 
 filename = './data.xlsx'
 
@@ -14,13 +14,13 @@ df = pd.read_excel(filename)
 #--------------------------------Functions----------------------------------------------
 
 def create_colour_1(row): #Create a second, more vague, spore print colour column
-	if row['Spore Print Colour 2'] == 'White' or row['Spore Print Colour 2'] == 'Cream' or row['Spore Print Colour 2'] == 'Buff':
+	if row['Exact Spore Print Colour'] == 'White' or row['Exact Spore Print Colour'] == 'Cream' or row['Exact Spore Print Colour'] == 'Buff':
 		return 'Pale'
-	if 'Brown' in row['Spore Print Colour 2']:
+	if 'Brown' in row['Exact Spore Print Colour']:
 		return 'Brown'
-	if 'Black' in row['Spore Print Colour 2']:
+	if 'Black' in row['Exact Spore Print Colour']:
 		return 'Dark (non-brown)'
-	if 'Pink' in row['Spore Print Colour 2']:
+	if 'Pink' in row['Exact Spore Print Colour']:
 		return 'Pink'
 	else:
 		return 'Other'
@@ -48,7 +48,7 @@ df['Stipe Description'] = df['Stipe Features'] + ' | ' + df['Stipe Description']
 df['Additional Features of Note'] = df['Size'] + ' | Veil: ' + df['Partial Veil'] + ' | ' + df['Additional Features of Note']
 
 #Spore Print Description Column
-df['Spore Print Colour Description'] = df['Spore Print Colour 2']
+df['Spore Print Colour Description'] = df['Exact Spore Print Colour']
 
 for row in to_be_expanded: #Expand needed rows
 	df[row] = df[row].str.strip()
@@ -57,11 +57,11 @@ for row in to_be_expanded: #Expand needed rows
 
 
 #Create Spore Print Colour 2
-df['Spore Print Colour 2'] = df['Spore Print Colour 2'].astype(str)
-df['Spore Print Colour 1'] = df.apply(create_colour_1, axis=1)
+df['Exact Spore Print Colour'] = df['Exact Spore Print Colour'].astype(str)
+df['General Spore Print Colour'] = df.apply(create_colour_1, axis=1)
 
 #Reorder some columns 
-df = df[['Genus Name', 'Spore Print Colour Description', 'Spore Print Colour 1', 'Spore Print Colour 2', 'Habitat',
+df = df[['Genus Name', 'Spore Print Colour Description', 'General Spore Print Colour', 'Exact Spore Print Colour', 'Habitat',
    'Habitat Description', 'Size', 'Cap Features', 
    'Cap Description', 'Partial Veil', 'Gill Description',
    'Gill Attachment', 'Stipe Features', 'Stipe Description',
@@ -85,7 +85,7 @@ print(df)
 df = pd.read_html('processeddataEXP.html')
 df = df[0]
 
-key_columns = ['Spore Print Colour 1', 'Spore Print Colour 2', 'Habitat', 'Size', 'Cap Features', 'Partial Veil', 'Gill Attachment', 'Stipe Features']
+key_columns = ['General Spore Print Colour', 'Exact Spore Print Colour', 'Habitat', 'Size', 'Cap Features', 'Partial Veil', 'Gill Attachment', 'Stipe Features']
 
 #-----------Functions------------------------------------------
 
