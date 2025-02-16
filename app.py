@@ -41,27 +41,48 @@ def voucher_generator():
 @app.route('/label_generator', methods=['GET', 'POST'])
 def label_generator():
     if request.method == 'POST':
-        username = request.form['username']
-        date_start = request.form['date_start']
-        date_end = request.form['date_end']
+        username = request.form.get('username')
+        date_start = request.form.get('date_start')
+        date_end = request.form.get('date_end')
         image_place = request.form.get('image_place', -1)  # Default to -1 if not provided
-        
-        observations = get_observations(username, date_start, date_end)
+        csv_file = request.files.get('csv_file')
+
+        print("what is csv file equal to", csv_file, username)
+        # if not username and not csv_file:
+        #     print("First empty request detected, skipping...")
+        #     return render_template('voucher_generator.html')  # Skip processing the first request
+
+        observations = []
+        print("Run once?", csv_file)
+        print("HELLO?")
+
+        if csv_file and csv_file.filename:  # Ensure a file is actually uploaded
+            csv_data = csv_file.read().decode('utf-8-sig')
+            observation_ids = [line.strip() for line in csv_data.splitlines() if line.strip()]
+            print(observation_ids)
+            observations = get_observations_by_ids(observation_ids)
+
+        elif username and date_start and date_end:
+            observations = get_observations(username, date_start, date_end)
+
         cards = [create_card(obs) for obs in observations]
-        
-        # Generate a unique filename with a datetime stamp
+        print("THESE ARE THE CARDS", cards)
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_filename = f"Labels_{timestamp}.pdf"
-        
+
         pdf_data = save_as_pdf(cards, output_filename)
-        
-        # Use tempfile.mkstemp to create a temporary file
+        print("PDFDATA", pdf_data)
+
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
+            print("creating file??")
             temp_file.write(pdf_data.getvalue())
             temp_file.seek(0)
             return send_file(temp_file.name, as_attachment=True, download_name=output_filename, mimetype='application/pdf')
-    
-    return render_template('label_generator.html')
+
+    return render_template('voucher_generator.html')
+
+
 
 @app.route('/fasta_generator', methods=['GET', 'POST'])
 def fasta_generator():
