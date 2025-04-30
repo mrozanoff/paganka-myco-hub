@@ -205,14 +205,14 @@
 		</div>
 		<form  class="generator-form"  method="POST" action="/fasta_generator" enctype="multipart/form-data">
 			<input type="text" name="genus" placeholder="iNaturalist Taxon ID" required>
-			<label>
+			<!-- <label>
 			<input type="checkbox" id="entireGenus" name="entire_genus"> Entire Genus
 			</label>
-			<input type="file" name="file" id="fileInput" required>
+			<input type="file" name="file" id="fileInput" required> -->
 			<input type="submit" value="Generate FASTA">
 		</form>
 		<div class="grey-section">
-			This pulls all relevant species' DNA ITS Data into a FASTA file. If you click 'Entire Genus', then you do not need to upload a file. If you would like specific species, please create a prov_name column and a name column. Input Excel file please. This can take some time to run if you are doing many.
+			Grab all DNA ITS from the taxons observations!
 		</div>
 		<!-- Modal Info Box for FASTA Generator -->
 		<div id="infoBoxFasta" class="info-box" style="display:none;">
