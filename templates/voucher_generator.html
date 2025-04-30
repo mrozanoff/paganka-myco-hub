@@ -357,46 +357,51 @@
 	//     // Handle popup cancel
 	//     cancelButton.addEventListener('click', refreshPage);
 	// });
+	//NEW ONE vv
+// 	document.addEventListener('DOMContentLoaded', () => {
+//     const forms = document.querySelectorAll('.generator-form'); // Select all generator forms
+//     const popup = document.getElementById('popup-overlay');
+//     const closeButton = document.getElementById('close-popup'); // Close button for errors
+//     const cancelButton = document.getElementById('cancel-popup'); // Cancel button
+//     const logOutput = document.getElementById('log-output');
 
-	document.addEventListener('DOMContentLoaded', () => {
-    const forms = document.querySelectorAll('.generator-form'); // Select all generator forms
-    const popup = document.getElementById('popup-overlay');
-    const closeButton = document.getElementById('close-popup'); // Close button for errors
-    const cancelButton = document.getElementById('cancel-popup'); // Cancel button
-    const logOutput = document.getElementById('log-output');
+//     // Show the popup
+//     function showPopup() {
+//         popup.style.display = 'block';
+//         logOutput.textContent = 'Processing your request...';
+//         closeButton.style.display = 'none'; // Initially hide the error close button
+//         cancelButton.style.display = 'block'; // Show the cancel button
+//     }
 
-    // Show the popup
-    function showPopup() {
-        popup.style.display = 'block';
-        logOutput.textContent = 'Processing your request...';
-        closeButton.style.display = 'none'; // Initially hide the error close button
-        cancelButton.style.display = 'block'; // Show the cancel button
-    }
+//     // Hide the popup
+//     function hidePopup() {
+//         popup.style.display = 'none';
+//     }
 
-    // Hide the popup
-    function hidePopup() {
-        popup.style.display = 'none';
-    }
+//     // Refresh the page (for the cancel button)
+//     function refreshPage() {
+//         location.reload();
+//     }
 
-    // Refresh the page (for the cancel button)
-    function refreshPage() {
-        location.reload();
-    }
+//     // Handle form submissions
+//     forms.forEach((form) => {
+//         form.addEventListener('submit', () => {
+//             showPopup(); // Show popup before submission
+//         });
+//     });
 
-    // Handle form submissions
-    forms.forEach((form) => {
-        form.addEventListener('submit', () => {
-            // Show the popup **before** the form submits naturally
-            showPopup();
-        });
-    });
+//     // Detect when the page has finished loading after form submission
+//     window.addEventListener('load', () => {
+//         hidePopup(); // Automatically close the popup when the page reloads
+//     });
 
-    // Handle popup close (error close button)
-    closeButton.addEventListener('click', hidePopup);
+//     // Handle popup close (error close button)
+//     closeButton.addEventListener('click', hidePopup);
 
-    // Handle popup cancel
-    cancelButton.addEventListener('click', refreshPage);
-});
+//     // Handle popup cancel
+//     cancelButton.addEventListener('click', refreshPage);
+// });
+
 
 
 </script>
