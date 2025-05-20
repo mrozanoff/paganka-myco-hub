@@ -4,17 +4,15 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from PIL import Image, ImageDraw, ImageFont
 import tempfile
-import os
-import requests
+import csv
 from datetime import datetime
 import pandas as pd
-import time
-import traceback
 
 from label import *
 from fasta import *
 from voucher import save_vouchers_to_pdf
 from dkey import *
+from species_finder import *
 
 app = Flask(__name__)
 
@@ -153,6 +151,42 @@ def dkey_builder():
 
 
     return render_template('dkey.html')
+
+@app.route('/species_finder', methods=['GET', 'POST'])
+def species_finder():
+    try:
+        combined_names = []
+        if request.method == 'POST':
+            taxon_id = request.form['taxon_id']
+            lat = float(request.form['latitude'])
+            lng = float(request.form['longitude'])
+            radius = float(request.form['radius'])
+
+            with_obs = get_observations_with_dna_coords(lat, lng, radius, taxon_id, with_provisional=True)
+            without_obs = get_observations_with_dna_coords(lat, lng, radius, taxon_id, with_provisional=False)
+
+            prov_names = get_provisional_names(with_obs)
+
+            binomial_names = get_binomial_names(without_obs)
+            combined_names = sorted(prov_names.union(binomial_names))
+
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'{taxon_id}_iNatSeqs_{timestamp}.csv'
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.csv', mode='w', encoding="utf-8", newline='') as temp_file:
+                writer = csv.writer(temp_file)
+                writer.writerow(['Species Name'])  # Header row
+                for name in combined_names:
+                    writer.writerow([name])
+                temp_file.flush()
+
+                return send_file(temp_file.name, as_attachment=True, download_name=filename, mimetype='text/csv')
+
+        return render_template('species_finder.html')
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return render_template('species_finder.html', names=[], error=str(e))
 
 @app.route('/purple_russulas')
 def purple_russulas():
