@@ -203,7 +203,7 @@
 			<!-- Question Mark Button for Voucher Generator -->
 			<button type="button" class="info-button" onclick="toggleInfo('infoBoxVoucher', 'overlayVoucher')">?</button>
 		</div>
-		<form  class="generator-form"  method="POST" action="/voucher_generator">
+		<form  class="generator-form" method="POST" action="/voucher_generator"> <!--  method="POST"-->
 			<input type="text" name="voucher_prefix" placeholder="Voucher Prefix (max 12 characters)" maxlength="12" required>
 			<input type="number" name="total_vouchers" placeholder="Total Vouchers (48 fills up one page)" required>
 			<input type="submit" value="Generate Vouchers">
@@ -227,12 +227,23 @@
 			<!-- Question Mark Button for Label Generator -->
 			<button type="button" class="info-button" onclick="toggleInfo('infoBoxLabel', 'overlayLabel')">?</button>
 		</div>
-		<form class="generator-form"  method="POST" action="/label_generator">
+		<form class="generator-form" method="POST" action="/label_generator" enctype="multipart/form-data"> 
+
+			<!-- Toggle for Input Method method="POST"^^-->
+			<div>
+				<input type="radio" id="toggle_dates" name="input_method" value="dates" checked onchange="toggleInputMethod('dates')">
+				<label for="toggle_dates">Use Date Range</label>
+				<input type="radio" id="toggle_file" name="input_method" value="file" onchange="toggleInputMethod('file')">
+				<label for="toggle_file">Use CSV File</label>
+			</div>
+
 			<input type="text" name="username" placeholder="iNat Username" required>
 			<div class="date-container">
 				<input type="date" class="date_inputs" id="date_start" name="date_start" placeholder="Start Date" required>
 				<input type="date" class="date_inputs" id="date_end" name="date_end" placeholder="End Date" required disabled>
 			</div>
+			<!-- File Input -->
+			<input type="file" name="csv_file" id="csv_file" accept=".csv" disabled>
 			<label for="image_place">Label Display Image</label>
                 <select name="image_place" id="image_place" required>
                     <option value="0">First</option>
@@ -281,70 +292,117 @@
     </script>
 
 <script>
-	document.addEventListener('DOMContentLoaded', () => {
-	    const forms = document.querySelectorAll('.generator-form'); // Select all generator forms
-	    const popup = document.getElementById('popup-overlay');
-	    const closeButton = document.getElementById('close-popup'); // Close button for errors
-	    const cancelButton = document.getElementById('cancel-popup'); // Cancel button
-	    const logOutput = document.getElementById('log-output');
+	// document.addEventListener('DOMContentLoaded', () => {
+	//     const forms = document.querySelectorAll('.generator-form'); // Select all generator forms
+	//     const popup = document.getElementById('popup-overlay');
+	//     const closeButton = document.getElementById('close-popup'); // Close button for errors
+	//     const cancelButton = document.getElementById('cancel-popup'); // Cancel button
+	//     const logOutput = document.getElementById('log-output');
 	
-	    // Show the popup
-	    function showPopup() {
-	        popup.style.display = 'block';
-	        logOutput.textContent = 'Processing your request...';
-	        closeButton.style.display = 'none'; // Initially hide the error close button
-	        cancelButton.style.display = 'block'; // Show the cancel button
-	    }
+	//     // Show the popup
+	//     function showPopup() {
+	//         popup.style.display = 'block';
+	//         logOutput.textContent = 'Processing your request...';
+	//         closeButton.style.display = 'none'; // Initially hide the error close button
+	//         cancelButton.style.display = 'block'; // Show the cancel button
+	//     }
 	
-	    // Hide the popup
-	    function hidePopup() {
-	        popup.style.display = 'none';
-	    }
+	//     // Hide the popup
+	//     function hidePopup() {
+	//         popup.style.display = 'none';
+	//     }
 	
-	    // Refresh the page (for the cancel button)
-	    function refreshPage() {
-	        location.reload();
-	    }
+	//     // Refresh the page (for the cancel button)
+	//     function refreshPage() {
+	//         location.reload();
+	//     }
 	
-	    // Handle form submissions
-	    forms.forEach((form) => {
-	        form.addEventListener('submit', (event) => {
+	//     // Handle form submissions
+	//     forms.forEach((form) => {
+	//         form.addEventListener('submit', (event) => {
+	// 			event.preventDefault();
 	
-	            // Show the popup
-	            showPopup();
+	//             // Show the popup
+	//             showPopup();
 	
-	            // Submit the form via JavaScript
-	            const formData = new FormData(form);
+	//             // Submit the form via JavaScript
+	//             const formData = new FormData(form);
 	
-	            fetch(form.action, {
-	                method: 'POST',
-	                body: formData
-	            })
-	                .then(response => {
-	                    if (response.ok) {
-	                        logOutput.textContent += '\nRequest processed successfully!';
-	                        cancelButton.style.display = 'none'; // Hide the cancel button
-	                        setTimeout(hidePopup, 2000); // Automatically close popup after success
-	                    } else {
-	                        logOutput.textContent += '\nError: Failed to process the request.';
-	                        cancelButton.style.display = 'none'; // Hide cancel button on error
-	                        closeButton.style.display = 'block'; // Show error close button
-	                    }
-	                })
-	                .catch(error => {
-	                    logOutput.textContent += `\nError: ${error.message}`;
-	                    cancelButton.style.display = 'none'; // Hide cancel button on error
-	                    closeButton.style.display = 'block'; // Show error close button
-	                });
-	        });
-	    });
+	//             fetch(form.action, {
+	//                 method: 'POST',
+	//                 body: formData
+	//             })
+	//                 .then(response => {
+	//                     if (response.ok) {
+	//                         logOutput.textContent += '\nRequest processed successfully!';
+	//                         cancelButton.style.display = 'none'; // Hide the cancel button
+	//                         setTimeout(hidePopup, 2000); // Automatically close popup after success
+	//                     } else {
+	//                         logOutput.textContent += '\nError: Failed to process the request.';
+	//                         cancelButton.style.display = 'none'; // Hide cancel button on error
+	//                         closeButton.style.display = 'block'; // Show error close button
+	//                     }
+	//                 })
+	//                 .catch(error => {
+	//                     logOutput.textContent += `\nError: ${error.message}`;
+	//                     cancelButton.style.display = 'none'; // Hide cancel button on error
+	//                     closeButton.style.display = 'block'; // Show error close button
+	//                 });
+	//         });
+	//     });
 	
-	    // Handle popup close (error close button)
-	    closeButton.addEventListener('click', hidePopup);
+	//     // Handle popup close (error close button)
+	//     closeButton.addEventListener('click', hidePopup);
 	
-	    // Handle popup cancel
-	    cancelButton.addEventListener('click', refreshPage);
-	});
+	//     // Handle popup cancel
+	//     cancelButton.addEventListener('click', refreshPage);
+	// });
+	//NEW ONE vv
+// 	document.addEventListener('DOMContentLoaded', () => {
+//     const forms = document.querySelectorAll('.generator-form'); // Select all generator forms
+//     const popup = document.getElementById('popup-overlay');
+//     const closeButton = document.getElementById('close-popup'); // Close button for errors
+//     const cancelButton = document.getElementById('cancel-popup'); // Cancel button
+//     const logOutput = document.getElementById('log-output');
+
+//     // Show the popup
+//     function showPopup() {
+//         popup.style.display = 'block';
+//         logOutput.textContent = 'Processing your request...';
+//         closeButton.style.display = 'none'; // Initially hide the error close button
+//         cancelButton.style.display = 'block'; // Show the cancel button
+//     }
+
+//     // Hide the popup
+//     function hidePopup() {
+//         popup.style.display = 'none';
+//     }
+
+//     // Refresh the page (for the cancel button)
+//     function refreshPage() {
+//         location.reload();
+//     }
+
+//     // Handle form submissions
+//     forms.forEach((form) => {
+//         form.addEventListener('submit', () => {
+//             showPopup(); // Show popup before submission
+//         });
+//     });
+
+//     // Detect when the page has finished loading after form submission
+//     window.addEventListener('load', () => {
+//         hidePopup(); // Automatically close the popup when the page reloads
+//     });
+
+//     // Handle popup close (error close button)
+//     closeButton.addEventListener('click', hidePopup);
+
+//     // Handle popup cancel
+//     cancelButton.addEventListener('click', refreshPage);
+// });
+
+
 
 </script>
 
@@ -389,5 +447,48 @@
         }
     });
 </script>
+<script>
+	function toggleInputMethod(method) {
+		const dateInputs = document.querySelectorAll('.date_inputs');
+		const startDateInput = document.getElementById('date_start');
+		const endDateInput = document.getElementById('date_end');
+		const fileInput = document.getElementById('csv_file');
+		const usernameInput = document.querySelector('input[name="username"]');
+
+		if (method === 'dates') {
+			// Enable start date, end date (only if it's enabled already), and username
+			startDateInput.disabled = false;
+			startDateInput.required = true;
+			usernameInput.disabled = false;
+			usernameInput.required = true;
+
+			// Only enable end date if it's not disabled by another logic
+			if (!endDateInput.disabled) {
+				endDateInput.disabled = false;
+				endDateInput.required = true;
+			}
+
+			// Disable file input
+			fileInput.disabled = true;
+			fileInput.required = false;
+		} else if (method === 'file') {
+			// Disable start date, end date, and username
+			startDateInput.disabled = true;
+			startDateInput.required = false;
+			endDateInput.disabled = true; // Always disable end date for "file"
+			endDateInput.required = false;
+			usernameInput.disabled = true;
+			usernameInput.required = false;
+			usernameInput.value = '';
+
+			// Enable file input
+			fileInput.disabled = false;
+			fileInput.required = true;
+		}
+	}
+</script>
+
+
+	
 
 {% endblock %}

@@ -4,17 +4,15 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from PIL import Image, ImageDraw, ImageFont
 import tempfile
-import os
-import requests
+import csv
 from datetime import datetime
 import pandas as pd
-import time
-import traceback
 
 from label import *
 from fasta import *
 from voucher import save_vouchers_to_pdf
 from dkey import *
+from species_finder import *
 
 app = Flask(__name__)
 
@@ -41,117 +39,90 @@ def voucher_generator():
 @app.route('/label_generator', methods=['GET', 'POST'])
 def label_generator():
     if request.method == 'POST':
-        username = request.form['username']
-        date_start = request.form['date_start']
-        date_end = request.form['date_end']
+        username = request.form.get('username')
+        date_start = request.form.get('date_start')
+        date_end = request.form.get('date_end')
         image_place = request.form.get('image_place', -1)  # Default to -1 if not provided
-        
-        observations = get_observations(username, date_start, date_end)
+        csv_file = request.files.get('csv_file')
+
+        print("what is csv file equal to", csv_file, username)
+        # if not username and not csv_file:
+        #     print("First empty request detected, skipping...")
+        #     return render_template('voucher_generator.html')  # Skip processing the first request
+
+        observations = []
+        print("Run once?", csv_file)
+        print("HELLO?")
+
+        if csv_file and csv_file.filename:  # Ensure a file is actually uploaded
+            csv_data = csv_file.read().decode('utf-8-sig')
+            observation_ids = [line.strip() for line in csv_data.splitlines() if line.strip()]
+            print(observation_ids)
+            observations = get_observations_by_ids(observation_ids)
+
+        elif username and date_start and date_end:
+            observations = get_observations(username, date_start, date_end)
+
         cards = [create_card(obs) for obs in observations]
-        
-        # Generate a unique filename with a datetime stamp
+        print("THESE ARE THE CARDS", cards)
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_filename = f"Labels_{timestamp}.pdf"
-        
+
         pdf_data = save_as_pdf(cards, output_filename)
-        
-        # Use tempfile.mkstemp to create a temporary file
+        print("PDFDATA", pdf_data)
+
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
+            print("creating file??")
             temp_file.write(pdf_data.getvalue())
             temp_file.seek(0)
             return send_file(temp_file.name, as_attachment=True, download_name=output_filename, mimetype='application/pdf')
-    
-    return render_template('label_generator.html')
+
+    return render_template('voucher_generator.html')
 
 @app.route('/fasta_generator', methods=['GET', 'POST'])
 def fasta_generator():
-    if request.method == 'POST':
+    try:
+        if request.method == 'POST':
+            entire_genus = request.form.get('entire_genus') == 'on'
+            rows = []
 
-        # Get the checkbox value
-        entire_genus = request.form.get('entire_genus') == 'on'
+            # Expecting a taxon_id input instead of genus name
+            taxon_id = request.form['genus']
+            # date_start = request.form['date_start']
+            # date_end = request.form['date_end']
+            observations = get_observations_with_dna(taxon_id) #, date_start, date_end)
 
-        # Get uploaded file and genus
-        genus = request.form['genus']
+            for obs in observations:
+                ofvs = obs.get("ofvs", [])
+                dna = next((field["value"] for field in ofvs if field["name"] == 'DNA Barcode ITS'), "")
+                if not dna:
+                    continue
 
-        rows = []
-        if entire_genus:
-            file = None  # Handle accordingly if entire_genus is checked
+                place_guess = obs.get("place_guess", "")
+                provisional_name = next((field["value"] for field in ofvs if 'provisional' in field["name"].lower()), None)
+                taxon_name = obs.get("taxon", {}).get("name", "")
+                fallback_name = taxon_name or "Unknown"
 
-            name = f"{genus}"
-            observation_ids = get_observation_ids(name, 'all')
-            for obs_id in observation_ids:
-                rows.append({"name": name, "inat_id": obs_id})
-        else:
-            file = request.files['file']
+                final_name = provisional_name if provisional_name else fallback_name
+                inat_id = obs.get("id")
 
-            # Read the uploaded file 
-            df = pd.read_excel(file)
+                rows.append({"name": final_name, "inat_id": inat_id, "DNA": dna, "Location": place_guess})
 
-            # Generate the FASTA content
-            prov_names = df['prov_names'].dropna().values.tolist()
-            normal_names_list = df['names'].dropna().values.tolist()
+            # Write to FASTA
+            fasta_data = BytesIO()
+            for row in rows:
+                fasta_data.write(f'>{row["inat_id"]} - {row["name"]} - {row["Location"]}\n{row["DNA"]}\n'.encode('utf-8'))
+            fasta_data.seek(0)
 
-            for name in prov_names:
-                search_name = f"{genus} {name}"
-                observation_ids = get_observation_ids(search_name, 'prov')
-                for obs_id in observation_ids:
-                    rows.append({"name": search_name, "inat_id": obs_id})
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.fasta') as temp_file:
+                temp_file.write(fasta_data.getvalue())
+                temp_file.seek(0)
+                return send_file(temp_file.name, as_attachment=True, download_name='out.fasta', mimetype='text/plain')
 
-            for name in normal_names_list:
-                search_name = f"{genus} {name}"
-                observation_ids = get_observation_ids(search_name, 'normal')
-                for obs_id in observation_ids:
-                    rows.append({"name": search_name, "inat_id": obs_id})
-
-        df = pd.DataFrame(rows).drop_duplicates(subset='inat_id')
-
-        # Fetch DNA sequences
-        id_list = df['inat_id'].values.tolist()
-        clean_df = df[['name', 'inat_id']].copy()
-        dna_sequences = {}
-        state_country = {}  # To store state and country
-
-        for id_ in id_list:
-            while True:
-                try:
-                    obs = get_observations_fasta(id_)
-                    # pprint.pp(obs)
-                    observational_fields = obs.get("results", [{}])[0].get("ofvs", [])
-                    dna = next((field["value"] for field in observational_fields if field["name"] == 'DNA Barcode ITS'), "")
-                    if dna:
-                        dna_sequences[id_] = dna
-                    # Extract state and country
-                    place_guess = obs.get("results", [{}])[0].get("place_guess", [])
-                    state_country[id_] = f"{place_guess}"
-                    break
-                except Exception as e:
-                    print(f"Exception: {e}")
-                    traceback.print_exc()
-                    time.sleep(30)
-                time.sleep(WAIT_TIME)
-
-        # Update DataFrame with DNA sequences
-        clean_df['DNA'] = clean_df['inat_id'].map(dna_sequences)
-        clean_df['Location'] = clean_df['inat_id'].map(state_country)
-        clean_df = clean_df.dropna(subset=['DNA'])
-
-        # Writing FASTA content to a file in memory
-        fasta_data = BytesIO()
-        for index, row in clean_df.iterrows():
-            name = row['name']
-            inat_id = row['inat_id']
-            DNA = row['DNA']
-            location = row['Location']
-            fasta_data.write(f'>{inat_id} - {name} - {location}\n{DNA}\n'.encode('utf-8'))
-        
-        fasta_data.seek(0)
-
-        # Save to a temporary file and send it as a response
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.fasta') as temp_file:
-            temp_file.write(fasta_data.getvalue())
-            temp_file.seek(0)
-            return send_file(temp_file.name, as_attachment=True, download_name='out.fasta', mimetype='text/plain')
-    return render_template('fasta_generator.html')
+        return render_template('fasta_generator.html')
+    except Exception as e:
+        print(e)
 
 @app.route('/dkey_builder', methods=['GET', 'POST'])
 def dkey_builder():
@@ -180,6 +151,42 @@ def dkey_builder():
 
 
     return render_template('dkey.html')
+
+@app.route('/species_finder', methods=['GET', 'POST'])
+def species_finder():
+    try:
+        combined_names = []
+        if request.method == 'POST':
+            taxon_id = request.form['taxon_id']
+            lat = float(request.form['latitude'])
+            lng = float(request.form['longitude'])
+            radius = float(request.form['radius'])
+
+            with_obs = get_observations_with_dna_coords(lat, lng, radius, taxon_id, with_provisional=True)
+            without_obs = get_observations_with_dna_coords(lat, lng, radius, taxon_id, with_provisional=False)
+
+            prov_names = get_provisional_names(with_obs)
+
+            binomial_names = get_binomial_names(without_obs)
+            combined_names = sorted(prov_names.union(binomial_names))
+
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'{taxon_id}_iNatSeqs_{timestamp}.csv'
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.csv', mode='w', encoding="utf-8", newline='') as temp_file:
+                writer = csv.writer(temp_file)
+                writer.writerow(['Species Name'])  # Header row
+                for name in combined_names:
+                    writer.writerow([name])
+                temp_file.flush()
+
+                return send_file(temp_file.name, as_attachment=True, download_name=filename, mimetype='text/csv')
+
+        return render_template('species_finder.html')
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return render_template('species_finder.html', names=[], error=str(e))
 
 @app.route('/purple_russulas')
 def purple_russulas():

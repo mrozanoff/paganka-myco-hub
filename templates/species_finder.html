@@ -196,41 +196,35 @@
 </div>
 
 <div class="container">
-	<!-- FASTA Generator Form -->
-	<div class="form-container">
-		<div class="header-container">
-			<h1>FASTA Generator</h1>
-			<!-- Question Mark Button for FASTA Generator -->
-			<button type="button" class="info-button" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')">?</button>
-		</div>
-		<form  class="generator-form"  method="POST" action="/fasta_generator" enctype="multipart/form-data">
-			<input type="text" name="genus" placeholder="iNaturalist Taxon ID" required>
-			<!-- <label>
-			<input type="checkbox" id="entireGenus" name="entire_genus"> Entire Genus
-			</label>
-			<input type="file" name="file" id="fileInput" required> -->
-			<input type="submit" value="Generate FASTA">
-		</form>
-		<div class="grey-section">
-			Grab all DNA ITS from the taxons observations!
-		</div>
-		<!-- Modal Info Box for FASTA Generator -->
-		<div id="infoBoxFasta" class="info-box" style="display:none;">
-			<span class="close" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')">&#x2715;</span>
-			<img src="/static/images/generator_images/fasta_example.jpg" alt="Info Image" class="info-image">
-			<p>Sample Program Output.</p>
-		</div>
-		<!-- Overlay for FASTA Generator -->
-		<div id="overlayFasta" class="overlay" onclick="toggleInfo('infoBoxFasta', 'overlayFasta')" style="display:none;"></div>
-	</div>
-</div>
-<script>
-	// Disable file input when "Entire Genus" checkbox is checked
-	document.getElementById('entireGenus').addEventListener('change', function() {
-	    var fileInput = document.getElementById('fileInput');
-	    fileInput.disabled = this.checked;
-	});
-</script>
+  <!-- Species Finder Form -->
+  <div class="form-container">
+    <div class="header-container">
+      <h1>Sequenced Species Finder</h1>
+      <button type="button" class="info-button" onclick="toggleInfo('infoBoxSpecies', 'overlaySpecies')">?</button>
+    </div>
+    <form class="generator-form" method="POST" action="/species_finder">
+      <input type="text" name="taxon_id" placeholder="iNaturalist Taxon ID" required>
+      <input type="text" name="latitude" placeholder="Latitude" required>
+      <input type="text" name="longitude" placeholder="Longitude" required>
+      <input type="text" name="radius" placeholder="Radius (km)" required>
+      <input type="submit" value="Find Species">
+    </form>
+
+    <div class="grey-section">
+      Retrieves provisional and standard species names from a specified location and taxon.
+    </div>
+
+    <!-- Modal Info Box -->
+    <div id="infoBoxSpecies" class="info-box" style="display:none;">
+      <span class="close" onclick="toggleInfo('infoBoxSpecies', 'overlaySpecies')">&#x2715;</span>
+      <img src="/static/images/generator_images/finder_example.jpg" alt="Info Image" class="info-image">
+      <p>Enter a lat/lng, radius in km, and a taxon ID to get a combined list of species with DNA barcodes.</p>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlaySpecies" class="overlay" onclick="toggleInfo('infoBoxSpecies', 'overlaySpecies')" style="display:none;"></div>
+  </div>
+
 
 <script>
     function toggleInfo(infoBoxId, overlayId) {
