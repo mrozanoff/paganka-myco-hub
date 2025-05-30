@@ -34,28 +34,6 @@ def get_observations(username, date_start, date_end):
         page += 1
     return observations
 
-
-# def get_observations_by_ids(observation_ids): # this works but lets test better
-#     """
-#     Fetch observations by their IDs and return them in the same format as get_observations.
-#     """
-#     observations = []
-#     base_url = "https://api.inaturalist.org/v1/observations/"
-#     # print(observation_ids)
-    
-#     for obs_id in observation_ids:
-#         time.sleep(1.5)  # Respect API rate limits
-#         url = f"{base_url}{obs_id}"
-#         response = requests.get(url)
-#         if response.status_code == 200:
-#             data = response.json()
-#             if 'results' in data and data['results']:
-#                 observations.extend(data['results'])  # Ensure consistent format
-#         else:
-#             print(f"Failed to fetch observation {obs_id}: {response.status_code}")
-    
-#     return observations
-
 def get_observations_by_ids(observation_ids):
     """
     Fetch observations by their IDs and return them in the same format as get_observations.
@@ -92,7 +70,8 @@ import requests
 from io import BytesIO
 
 def download_image(url):
-    response = requests.get(url)
+    large_image_url = url.replace("square", "large")
+    response = requests.get(large_image_url)
     if response.status_code == 200:
         return Image.open(BytesIO(response.content))
     return None  # Return None if the image can't be downloaded
@@ -116,10 +95,10 @@ def create_card(observation, card_size=(600, 800)):
     font = ImageFont.truetype("./static/fonts/arial.ttf", size=40)
     font_small = ImageFont.truetype("./static/fonts/arial.ttf", size=25)
     text_x = 10
-    text_y = int(card_size[1] * 0.775) + 10
+    text_y = image.height + 10 # text_y = int(card_size[1] * 0.775) + 10
 
     draw.text((text_x, text_y), f"Name: ", fill="black", font=font)
-    draw.text((text_x, text_y + 45), f"iNat ID: {observation.get('id', 'Unknown')}", fill="black", font=font)
+    draw.text((text_x, text_y + 45), f"iNat ID: {format_number(observation.get('id', 'Unknown'))}", fill="black", font=font)
     draw.text((text_x, text_y + 95), f"Date: {observation.get('observed_on', 'Unknown')}", fill="black", font=font_small)
     draw.text((text_x, text_y + 130), f"Location: {observation.get('place_guess', 'Unknown')}", fill="black", font=font_small)
     # print("end of create card", card)
