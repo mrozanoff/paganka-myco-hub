@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, send_file, Blueprint
-from io import BytesIO
+from io import BytesIO, StringIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from PIL import Image, ImageDraw, ImageFont
@@ -7,6 +7,7 @@ import tempfile
 import csv
 from datetime import datetime
 import pandas as pd
+import re
 
 from label import *
 from fasta import *
@@ -15,7 +16,7 @@ from dkey import *
 from species_finder import *
 
 app = Flask(__name__)
-
+app.debug = True
 
 
 @app.route('/')
@@ -82,47 +83,227 @@ def label_generator():
 
 @app.route('/fasta_generator', methods=['GET', 'POST'])
 def fasta_generator():
-    try:
-        if request.method == 'POST':
-            entire_genus = request.form.get('entire_genus') == 'on'
-            rows = []
+    # try:
+    if request.method == 'POST':
 
-            # Expecting a taxon_id input instead of genus name
-            taxon_id = request.form['genus']
-            # date_start = request.form['date_start']
-            # date_end = request.form['date_end']
-            observations = get_observations_with_dna(taxon_id) #, date_start, date_end)
+        csv_mode = request.form.get("csv_mode") == "on"
+        rows = []
 
-            for obs in observations:
-                ofvs = obs.get("ofvs", [])
-                dna = next((field["value"] for field in ofvs if field["name"] == 'DNA Barcode ITS'), "")
-                if not dna:
-                    continue
+        taxon_id = request.form['genus']
+        observations = get_observations_with_dna(taxon_id)
 
-                place_guess = obs.get("place_guess", "")
-                provisional_name = next((field["value"] for field in ofvs if 'provisional' in field["name"].lower()), None)
-                taxon_name = obs.get("taxon", {}).get("name", "")
-                fallback_name = taxon_name or "Unknown"
+        for obs in observations:
+            ofvs = obs.get("ofvs", [])
 
-                final_name = provisional_name if provisional_name else fallback_name
-                inat_id = obs.get("id")
+            # Main DNA field
+            dna = next((f["value"] for f in ofvs if f["name"] == "DNA Barcode ITS"), "")
+            if not dna:
+                continue  # skip if no DNA
 
-                rows.append({"name": final_name, "inat_id": inat_id, "DNA": dna, "Location": place_guess})
+            # Basic fields
+            place_guess = obs.get("place_guess", "")
+            taxon_name = obs.get("taxon", {}).get("name", "") or "Unknown"
+            inat_id = obs.get("id")
 
-            # Write to FASTA
-            fasta_data = BytesIO()
-            for row in rows:
-                fasta_data.write(f'>{row["inat_id"]} - {row["name"]} - {row["Location"]}\n{row["DNA"]}\n'.encode('utf-8'))
-            fasta_data.seek(0)
+            # Optional OFVs you requested
+            ric = next((f["value"] for f in ofvs if "reads" in f["name"].lower()), "")
+            provisional_name = next((f["value"] for f in ofvs if "provisional species name" in f["name"].lower()), "")
+            voucher_numbers = next((f["value"] for f in ofvs if "voucher number" in f["name"].lower()), "")
+            sequencing_tech = next((f["value"] for f in ofvs if "sequencing technology" in f["name"].lower()), "")
+            blast_results = next((f["value"] for f in ofvs if "mycomap blast results" in f["name"].lower()), "")
+            trace_files = next((f["value"] for f in ofvs if "trace files" in f["name"].lower()), "")
+            dna_2 = next((f["value"] for f in ofvs if f["name"] == "DNA Barcode ITS #2"), "")
+            lsu = next((f["value"] for f in ofvs if f["name"] == "DNA Barcode LSU"), "")
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.fasta') as temp_file:
-                temp_file.write(fasta_data.getvalue())
+            final_name = provisional_name if provisional_name else taxon_name
+
+            # --- Sanitize DNA fields (remove spaces + newlines) ---
+            def clean_dna(value):
+                if not value:
+                    return ""
+                return "".join(value.split())  # removes spaces, tabs, newlines
+
+            clean_dna_its = clean_dna(dna)
+            clean_dna_its2 = clean_dna(dna_2)
+            clean_lsu = clean_dna(lsu)
+
+            # --- Extract Country (best-effort from iNat location fields) ---
+            # Try place_guess → then location → then default ""
+            country = ""
+            place_guess = obs.get("place_guess", "")
+            if place_guess:
+                # Country is often the last comma-separated token
+                parts = [p.strip() for p in place_guess.split(",")]
+                if len(parts) >= 2:
+                    country = parts[-1]
+                else:
+                    country = place_guess
+
+            # --- State / Province extraction ---
+            US_STATES = {
+                "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA",
+                "ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK",
+                "OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"
+            }
+
+            CA_PROVINCES = {
+                "AB","BC","MB","NB","NL","NS","NT","NU","ON","PE","QC","SK","YT"
+            }
+
+            state = ""
+
+            if place_guess:
+                tokens = [t.strip().replace(".", "") for t in place_guess.split(",")]
+                for t in tokens:
+                    parts = t.split()
+                    for p in parts:
+                        if p in US_STATES or p in CA_PROVINCES:
+                            state = p
+                            break
+                    if state:
+                        break
+
+            # --- FASTA format column ---
+            # Prefer voucher number; fallback to inat ID
+            header_id = voucher_numbers if voucher_numbers else str(inat_id)
+
+            # Convert spaces to underscores for FASTA header fields
+            safe_header_id = str(header_id).replace(" ", "_")
+            safe_final_name = str(final_name).replace(" ", "_")
+
+            location_tag = f"{state}_{country}" if state else country
+
+            # Clean location tag → whitespace to underscore
+            safe_location_tag = re.sub(r"\s+", "_", location_tag.strip())
+
+            # Keep only alphanumeric, dash, underscore in final name
+            safe_final_name = re.sub(r"[^A-Za-z0-9_-]", "", safe_final_name)
+
+            # Clean header ID the same way (optional but recommended)
+            safe_header_id = re.sub(r"[^A-Za-z0-9_-]", "", safe_header_id)
+
+            # Build header first
+            header = f"{safe_header_id}_{safe_final_name}_{safe_location_tag}"
+
+            # Remove any remaining disallowed characters from header
+            header = re.sub(r"[^A-Za-z0-9_-]", "", header)
+
+            fasta_formatted = f">{header}\n{clean_dna_its.lower()}"
+
+            rows.append({
+                "name": final_name,
+                "inat_id": inat_id,
+
+                # Original DNA columns, now cleaned
+                "DNA Barcode ITS": clean_dna_its,
+                "DNA Barcode ITS #2": clean_dna_its2,
+                "DNA Barcode LSU": clean_lsu,
+
+                "Country": country,
+                "Location": place_guess,
+
+                "RiC": ric,
+                "Provisional Name": provisional_name,
+                "Voucher Numbers": voucher_numbers,
+                "Sequencing Technology": sequencing_tech,
+                "BLAST Results": blast_results,
+                "Trace Files": trace_files,
+
+                # New FASTA COLUMN
+                "FASTA Format": fasta_formatted
+            })
+
+        # -------------------------------------
+        #         CSV MODE OUTPUT
+        # -------------------------------------
+        if csv_mode:
+            csv_text = StringIO()
+            writer = csv.DictWriter(csv_text, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+
+            # Convert text to bytes for sending
+            csv_bytes = BytesIO(csv_text.getvalue().encode("utf-8"))
+            csv_bytes.seek(0)
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as temp_file:
+                temp_file.write(csv_bytes.getvalue())
                 temp_file.seek(0)
-                return send_file(temp_file.name, as_attachment=True, download_name='out.fasta', mimetype='text/plain')
+                return send_file(temp_file.name, as_attachment=True,
+                                download_name='out.csv',
+                                mimetype='text/csv')
 
-        return render_template('fasta_generator.html')
-    except Exception as e:
-        print(e)
+
+        # -------------------------------------
+        #         ORIGINAL FASTA MODE
+        # -------------------------------------
+        fasta_data = BytesIO()
+        for row in rows:
+            fasta_data.write(
+                fasta_formatted
+                # f'>{row["inat_id"]} - {row["name"]} - {row["Location"]}\n{row["DNA Barcode ITS"]}\n'.encode('utf-8')
+            )
+        fasta_data.seek(0)
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.fasta') as temp_file:
+            temp_file.write(fasta_data.getvalue())
+            temp_file.seek(0)
+            return send_file(temp_file.name, as_attachment=True,
+                                download_name='out.fasta',
+                                mimetype='text/plain')
+
+    return render_template('fasta_generator.html')
+
+    # except Exception as e:
+    #     print(e)
+    #     return "An error occurred", 500
+
+
+
+# @app.route('/fasta_generator', methods=['GET', 'POST'])
+# def fasta_generator():
+#     try:
+#         if request.method == 'POST':
+#             entire_genus = request.form.get('entire_genus') == 'on'
+#             rows = []
+
+#             # Expecting a taxon_id input instead of genus name
+#             taxon_id = request.form['genus']
+#             # date_start = request.form['date_start']
+#             # date_end = request.form['date_end']
+#             observations = get_observations_with_dna(taxon_id) #, date_start, date_end)
+
+#             for obs in observations:
+#                 ofvs = obs.get("ofvs", [])
+#                 dna = next((field["value"] for field in ofvs if field["name"] == 'DNA Barcode ITS'), "")
+#                 if not dna:
+#                     continue
+
+#                 place_guess = obs.get("place_guess", "")
+#                 provisional_name = next((field["value"] for field in ofvs if 'provisional' in field["name"].lower()), None)
+#                 taxon_name = obs.get("taxon", {}).get("name", "")
+#                 fallback_name = taxon_name or "Unknown"
+
+#                 final_name = provisional_name if provisional_name else fallback_name
+#                 inat_id = obs.get("id")
+
+#                 rows.append({"name": final_name, "inat_id": inat_id, "DNA": dna, "Location": place_guess})
+
+#             # Write to FASTA
+#             fasta_data = BytesIO()
+#             for row in rows:
+#                 fasta_data.write(f'>{row["inat_id"]} - {row["name"]} - {row["Location"]}\n{row["DNA"]}\n'.encode('utf-8'))
+#             fasta_data.seek(0)
+
+#             with tempfile.NamedTemporaryFile(delete=False, suffix='.fasta') as temp_file:
+#                 temp_file.write(fasta_data.getvalue())
+#                 temp_file.seek(0)
+#                 return send_file(temp_file.name, as_attachment=True, download_name='out.fasta', mimetype='text/plain')
+
+#         return render_template('fasta_generator.html')
+#     except Exception as e:
+#         print(e)
+
 
 @app.route('/dkey_builder', methods=['GET', 'POST'])
 def dkey_builder():
