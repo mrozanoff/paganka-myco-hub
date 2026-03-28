@@ -7,6 +7,7 @@ import tempfile
 import csv
 from datetime import datetime
 import pandas as pd
+import re
 
 from label import *
 from fasta import *
@@ -138,6 +139,30 @@ def fasta_generator():
                 else:
                     country = place_guess
 
+            # --- State / Province extraction ---
+            US_STATES = {
+                "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA",
+                "ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK",
+                "OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"
+            }
+
+            CA_PROVINCES = {
+                "AB","BC","MB","NB","NL","NS","NT","NU","ON","PE","QC","SK","YT"
+            }
+
+            state = ""
+
+            if place_guess:
+                tokens = [t.strip().replace(".", "") for t in place_guess.split(",")]
+                for t in tokens:
+                    parts = t.split()
+                    for p in parts:
+                        if p in US_STATES or p in CA_PROVINCES:
+                            state = p
+                            break
+                    if state:
+                        break
+
             # --- FASTA format column ---
             # Prefer voucher number; fallback to inat ID
             header_id = voucher_numbers if voucher_numbers else str(inat_id)
@@ -146,8 +171,24 @@ def fasta_generator():
             safe_header_id = str(header_id).replace(" ", "_")
             safe_final_name = str(final_name).replace(" ", "_")
 
-            fasta_formatted = f">{safe_header_id}_{safe_final_name}\n{clean_dna_its.lower()}"
+            location_tag = f"{state}_{country}" if state else country
 
+            # Clean location tag → whitespace to underscore
+            safe_location_tag = re.sub(r"\s+", "_", location_tag.strip())
+
+            # Keep only alphanumeric, dash, underscore in final name
+            safe_final_name = re.sub(r"[^A-Za-z0-9_-]", "", safe_final_name)
+
+            # Clean header ID the same way (optional but recommended)
+            safe_header_id = re.sub(r"[^A-Za-z0-9_-]", "", safe_header_id)
+
+            # Build header first
+            header = f"{safe_header_id}_{safe_final_name}_{safe_location_tag}"
+
+            # Remove any remaining disallowed characters from header
+            header = re.sub(r"[^A-Za-z0-9_-]", "", header)
+
+            fasta_formatted = f">{header}\n{clean_dna_its.lower()}"
 
             rows.append({
                 "name": final_name,
@@ -199,7 +240,8 @@ def fasta_generator():
         fasta_data = BytesIO()
         for row in rows:
             fasta_data.write(
-                f'>{row["inat_id"]} - {row["name"]} - {row["Location"]}\n{row["DNA"]}\n'.encode('utf-8')
+                fasta_formatted
+                # f'>{row["inat_id"]} - {row["name"]} - {row["Location"]}\n{row["DNA Barcode ITS"]}\n'.encode('utf-8')
             )
         fasta_data.seek(0)
 
